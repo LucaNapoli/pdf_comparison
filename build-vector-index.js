@@ -17,6 +17,10 @@ async function run() {
             "path": "vector_embeddings",
             "similarity": "cosine",
             "numDimensions": 1024
+          },
+          {
+            "type": "filter",
+            "path": "source_pdf"
           }
         ]
       }

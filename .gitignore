@@ -1,4 +1,5 @@
 .env
 package-lock.json
-package.json
 .venv
+uploads/
+node_modules

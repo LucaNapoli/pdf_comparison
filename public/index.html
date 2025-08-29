@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Demo Builder</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <svg class="logo-svg" viewBox="0 0 124 204" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M82.3223 101.612C82.3223 101.612 42.4767 122.434 42.4767 152.15C42.4767 181.866 82.3223 202.688 82.3223 202.688V101.612Z" fill="#4DB33D"/>
+                <path d="M42.4767 101.612C42.4767 101.612 82.3223 80.79 82.3223 51.074C82.3223 21.358 42.4767 0.536011 42.4767 0.536011V101.612Z" fill="#4DB33D"/>
+                <path d="M42.4767 101.612V0.536011C42.4767 0.536011 2.63107 21.358 2.63107 51.074C2.63107 80.79 42.4767 101.612 42.4767 101.612Z" fill="#40A534"/>
+                <path d="M42.4767 101.612V202.688C42.4767 202.688 2.63107 181.866 2.63107 152.15C2.63107 122.434 42.4767 101.612 42.4767 101.612Z" fill="#39932D"/>
+                <path d="M82.3223 101.612V138.05C82.3223 138.05 57.3995 129.082 57.3995 115.208C57.3995 101.334 82.3223 92.366 82.3223 92.366V101.612Z" fill="#13740A"/>
+                <path d="M82.3223 65.174V92.366C82.3223 92.366 57.3995 101.334 57.3995 115.208C57.3995 129.082 82.3223 138.05 82.3223 138.05V152.15C82.3223 181.866 42.4767 202.688 42.4767 202.688V101.612V0.536011C42.4767 0.536011 82.3223 21.358 82.3223 51.074V65.174Z" fill="#12A524"/>
+            </svg>
+            <h2>Chatbot Demo Builder</h2>
+        </div>
+        <nav>
+            <a href="#" class="nav-link active">
+                <span>Compare Documents</span>
+                <span class="info-icon">i</span>
+            </a>
+        </nav>
+    </div>
+    <div class="main-content">
+        <header class="header">
+            <h1>Compare and Contrast Documents</h1>
+            <p>Upload two or more PDF documents to compare them.</p>
+        </header>
+
+        <section class="data-source-section">
+            <h2>1. Add Data Sources</h2>
+            <p class="subtitle">Select one or more content sources to compare.</p>
+            <div id="drop-zone" class="card active">
+                <img src="/images/upload.svg" alt="Upload icon">
+                <h3>Drag & drop files or click to upload</h3>
+                <p>PDF</p>
+                <input type="file" id="file-input" multiple hidden accept="application/pdf">
+            </div>
+            <div id="file-list"></div>
+            <button id="upload-button" class="hidden">Upload and Ingest</button>
+            
+            <div id="previous-files-container" class="previous-files-container">
+                <h3>Previously Uploaded</h3>
+                <div id="previous-files-list"></div>
+            </div>
+        </section>
+
+        <section id="comparison-section" class="comparison-section">
+            <h2>2. Ask a question</h2>
+            <form id="query-form">
+                <input type="text" id="question" placeholder="e.g., What are the main differences between the documents?" required disabled>
+                <button type="submit" disabled>Compare</button>
+            </form>
+            <div id="predefined-questions" class="predefined-questions hidden">
+                <h4>Suggested Questions</h4>
+                <button class="predefined-question-btn">How do NOx emission limits change?</button>
+                <button class="predefined-question-btn">What safety systems become mandatory?</button>
+                <button class="predefined-question-btn">What are the new crash test requirements?</button>
+            </div>
+            <div id="loader" class="loader hidden">
+                <div class="spinner"></div>
+                <p>Processing...</p>
+            </div>
+            <div id="response" class="response"></div>
+        </section>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const uploadButton = document.getElementById('upload-button');
+        const queryForm = document.getElementById('query-form');
+        const questionInput = document.getElementById('question');
+        const queryButton = queryForm.querySelector('button');
+        const responseDiv = document.getElementById('response');
+        const loader = document.getElementById('loader');
+        const comparisonSection = document.getElementById('comparison-section');
+        const previousFilesList = document.getElementById('previous-files-list');
+        const predefinedQuestionsDiv = document.getElementById('predefined-questions');
+
+        let filesToUpload = [];
+        let allAvailableFiles = [];
+
+        document.addEventListener('DOMContentLoaded', fetchPreviousFiles);
+
+        async function fetchPreviousFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+                allAvailableFiles = files;
+                renderPreviousFiles(files);
+                if (allAvailableFiles.length > 0) {
+                    questionInput.disabled = false;
+                    queryButton.disabled = false;
+                    predefinedQuestionsDiv.classList.remove('hidden');
+                } else {
+                    questionInput.disabled = true;
+                    queryButton.disabled = true;
+                    predefinedQuestionsDiv.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error fetching previous files:', error);
+            }
+        }
+
+        function renderPreviousFiles(files) {
+            previousFilesList.innerHTML = '';
+            if (files.length === 0) {
+                document.getElementById('previous-files-container').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('previous-files-container').style.display = 'block';
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-list-item previous-file';
+                
+                const fileName = document.createElement('span');
+                fileName.textContent = file;
+                fileItem.appendChild(fileName);
+
+                const buttonsWrapper = document.createElement('div');
+                buttonsWrapper.className = 'file-item-buttons';
+
+                const viewButton = document.createElement('a');
+                viewButton.className = 'view-file-button';
+                viewButton.textContent = 'View';
+                viewButton.href = `/uploads/${file}`;
+                viewButton.target = '_blank';
+                buttonsWrapper.appendChild(viewButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-file-button';
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteFile(file);
+                buttonsWrapper.appendChild(deleteButton);
+
+                fileItem.appendChild(buttonsWrapper);
+
+                previousFilesList.appendChild(fileItem);
+            });
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm(`Are you sure you want to delete ${filename}? This will remove it from the database and the server.`)) {
+                return;
+            }
+
+            showLoader(true, `Deleting ${filename}...`);
+            try {
+                const response = await fetch(`/api/files/${filename}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Delete failed');
+                }
+                fetchPreviousFiles(); // Refresh the list
+                if (allAvailableFiles.length === 0) {
+                    questionInput.disabled = true;
+                    queryButton.disabled = true;
+                    predefinedQuestionsDiv.classList.add('hidden');
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        predefinedQuestionsDiv.addEventListener('click', (e) => {
+            if (e.target.classList.contains('predefined-question-btn')) {
+                const question = e.target.textContent;
+                questionInput.value = question;
+                queryForm.requestSubmit(); // Modern way to submit a form
+            }
+        });
+
+        // Event listeners for drag and drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const newFiles = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            handleFiles(newFiles);
+        });
+        fileInput.addEventListener('change', () => {
+            const newFiles = Array.from(fileInput.files);
+            handleFiles(newFiles);
+        });
+
+        function handleFiles(newFiles) {
+            filesToUpload.push(...newFiles);
+            renderFileList();
+            uploadButton.classList.remove('hidden');
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = '';
+            filesToUpload.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-list-item';
+                
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+                fileItem.appendChild(fileName);
+
+                const removeButton = document.createElement('button');
+                removeButton.className = 'remove-file';
+                removeButton.textContent = '×';
+                removeButton.onclick = (e) => {
+                    e.stopPropagation();
+                    filesToUpload.splice(index, 1);
+                    renderFileList();
+                    if (filesToUpload.length === 0) {
+                        uploadButton.classList.add('hidden');
+                    }
+                };
+                fileItem.appendChild(removeButton);
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            if (filesToUpload.length === 0) {
+                alert('Please select files to upload.');
+                return;
+            }
+            const formData = new FormData();
+            filesToUpload.forEach(file => {
+                formData.append('pdfs', file);
+            });
+
+            showLoader(true, 'Ingesting documents...');
+            responseDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Upload failed');
+                }
+                
+                filesToUpload = []; // Clear the list of files to upload
+                renderFileList(); // Re-render to show it's empty
+                uploadButton.classList.add('hidden'); // Hide upload button
+
+                fetchPreviousFiles(); // Refresh the list of all available files
+            } catch (error) {
+                responseDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            } finally {
+                showLoader(false);
+            }
+        });
+
+        queryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value;
+            if (allAvailableFiles.length < 1) {
+                alert('Please upload at least one PDF to ask a question.');
+                return;
+            }
+            
+            showLoader(true, 'Generating response...');
+            responseDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, files: allAvailableFiles })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Query failed');
+                }
+                responseDiv.innerHTML = marked.parse(result.answer);
+            } catch (error) {
+                responseDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            } finally {
+                showLoader(false);
+            }
+        });
+
+        function showLoader(show, message = 'Processing...') {
+            loader.querySelector('p').textContent = message;
+            if (show) {
+                loader.classList.remove('hidden');
+            } else {
+                loader.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

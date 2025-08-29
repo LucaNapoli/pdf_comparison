@@ -1,0 +1,360 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;700&display=swap');
+
+:root {
+    --background-dark: #0F172A;
+    --sidebar-bg: #020617;
+    --card-bg: #1E293B;
+    --text-primary: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --accent-green: #4ADE80;
+    --border-color: #334155;
+    --button-bg: var(--accent-green);
+    --button-hover-bg: #36a164;
+    --danger-color: #F43F5E;
+}
+
+body {
+    font-family: 'Geist Sans', sans-serif;
+    margin: 0;
+    background-color: var(--background-dark);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 280px;
+    background-color: var(--sidebar-bg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.logo-svg {
+    width: 40px;
+    height: auto;
+}
+
+.logo h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.nav-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.nav-link.active, .nav-link:hover {
+    background-color: var(--card-bg);
+}
+
+.nav-link .info-icon {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-family: monospace;
+    border: 1px solid var(--text-secondary);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem 4rem;
+    overflow-y: auto;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.header p.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.source-cards {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    flex: 1;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.card.active {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.2);
+}
+
+.card.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.card img {
+    height: 40px;
+    margin-bottom: 1rem;
+    filter: invert(75%) sepia(10%) saturate(400%) hue-rotate(180deg);
+}
+
+.card h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+#upload-area {
+    display: block; /* Initially visible */
+}
+
+#drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    margin-bottom: 20px;
+    background-color: var(--card-bg);
+}
+
+#drop-zone.dragover {
+    border-color: var(--accent-green);
+    background-color: #293a52;
+}
+
+#file-list {
+    margin-bottom: 20px;
+}
+
+.file-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--card-bg);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    padding: 0 4px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background-color: var(--button-bg);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+#upload-button {
+    max-width: 250px;
+    background-color: var(--accent-green);
+    color: var(--background-dark);
+    font-weight: bold;
+}
+
+#upload-button:hover {
+    opacity: 0.9;
+}
+
+.loader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 20px 0;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--accent-green);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.response {
+    margin-top: 20px;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.response p {
+    margin-top: 0;
+}
+
+.response a {
+    color: var(--accent-green);
+    text-decoration: none;
+}
+.response a:hover {
+    text-decoration: underline;
+}
+
+.response .error {
+    color: var(--danger-color);
+}
+
+.hidden {
+    display: none;
+}
+
+.previous-files-container {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.previous-files-container h3 {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.view-file-button {
+    background-color: var(--button-bg);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.view-file-button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.file-item-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.delete-file-button {
+    background-color: var(--danger-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.delete-file-button:hover {
+    opacity: 0.8;
+}
+
+.predefined-questions {
+    margin-top: 1.5rem;
+}
+
+.predefined-questions h4 {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.predefined-question-btn {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    width: auto;
+    padding: 8px 16px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.predefined-question-btn:hover {
+    background-color: var(--border-color);
+    border-color: var(--text-secondary);
+}

@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import { getEmbedding } from './get-embeddings.js';
 
 // Function to get the results of a vector query
-export async function getQueryResults(query, numCandidates, exact, limit) {
+export async function getQueryResults(query, numCandidates, exact, limit, sourcePDFs = []) {
   // Connect to your Atlas cluster
   const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
 
@@ -12,22 +12,31 @@ export async function getQueryResults(query, numCandidates, exact, limit) {
     await client.connect();
     const db = client.db("rag_db");
     const collection = db.collection("test");
+    const vectorSearchStage = {
+      $vectorSearch: {
+        index: "vector_index",
+        queryVector: queryEmbedding,
+        path: "vector_embeddings",
+        numCandidates,
+        exact,
+        limit,
+      }
+    };
+
+    if (sourcePDFs.length > 0) {
+      vectorSearchStage.$vectorSearch.filter = {
+        source_pdf: { $in: sourcePDFs }
+      };
+    }
+
     const pipeline = [
-      {
-        $vectorSearch: {
-          index: "vector_index",
-          queryVector: queryEmbedding,
-          path: "vector_embeddings",
-          numCandidates,
-          exact,
-          limit,
-        }
-      },
+      vectorSearchStage,
       {
         $project: {
-          vector_embeddings: 1,
+          _id: 0,
           text: 1,
           page_number: 1,
+          source_pdf: 1,
           score: {
             $meta: "vectorSearchScore"
           }

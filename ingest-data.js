@@ -4,8 +4,7 @@ import { MongoClient } from 'mongodb';
 import { getEmbeddings } from './get-embeddings.js';
 import { getEncoding } from 'js-tiktoken';
 
-// Specify the pdf file name
-const PDF_FILE = `sample_pdf.pdf`;
+// The PDF file to ingest is passed as a command-line argument.
 
 // Specify the chunking params
 const CHUNK_SIZE = 250;
@@ -19,9 +18,15 @@ export const getTokenCount = (text) => {
 };
 
 async function run() {
+  const pdfPath = process.argv[2];
+  if (!pdfPath) {
+    console.error('Please provide the path to a PDF file as a command-line argument.');
+    process.exit(1);
+  }
+
   const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
   try {
-    const loader = new PDFLoader(PDF_FILE);
+    const loader = new PDFLoader(pdfPath);
     const data = await loader.load();
     // Chunk the text from the PDF
     const textSplitter = new RecursiveCharacterTextSplitter({
@@ -30,21 +35,19 @@ async function run() {
       lengthFunction: getTokenCount,
     });
     const docs = await textSplitter.splitDocuments(data);
-    console.log(`Successfully chunked the PDF into ${docs.length} documents.`);
+    console.log(`Successfully chunked ${pdfPath} into ${docs.length} documents.`);
     // Connect to your Atlas cluster
     await client.connect();
     const db = client.db("rag_db");
     const collection = db.collection("test");
-    console.log("Clearing your collection of any pre-existing data.");
-    const deleteResult = await collection.deleteMany({});
-    console.log("Deleted " + deleteResult.deletedCount + " documents");
+    
     console.log("Generating embeddings and inserting documents...");
     const embeddings = await getEmbeddings(docs.map(doc => doc.pageContent));
     const insertDocuments = docs.map((doc, index) => ({
-      _id: index,
       text: doc.pageContent,
       vector_embeddings: embeddings[index],
       page_number: doc.metadata.loc.pageNumber,
+      source_pdf: pdfPath,
     }));
     // Continue processing documents if an error occurs during an operation
     const options = { ordered: false };
