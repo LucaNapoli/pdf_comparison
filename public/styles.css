@@ -41,8 +41,8 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.logo-svg {
-    width: 40px;
+.logo-img {
+    width: 100%;
     height: auto;
 }
 
@@ -85,9 +85,9 @@ body {
 
 .main-content {
     flex: 1;
-    padding: 2rem 4rem;
+    padding: 2rem 8rem;
     overflow-y: auto;
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -235,6 +235,19 @@ button:hover {
     opacity: 0.9;
 }
 
+#query-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#query-form button {
+    width: auto;
+    padding: 12px 40px;
+    color: var(--background-dark);
+    font-weight: bold;
+}
+
 .loader {
     display: flex;
     align-items: center;
@@ -295,6 +308,31 @@ button:hover {
     font-size: 1rem;
     color: var(--text-secondary);
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#select-all-btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    width: auto;
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.previous-file label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+.previous-file input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
 }
 
 .view-file-button {

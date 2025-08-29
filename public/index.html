@@ -10,15 +10,7 @@
 <body>
     <div class="sidebar">
         <div class="logo">
-            <svg class="logo-svg" viewBox="0 0 124 204" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M82.3223 101.612C82.3223 101.612 42.4767 122.434 42.4767 152.15C42.4767 181.866 82.3223 202.688 82.3223 202.688V101.612Z" fill="#4DB33D"/>
-                <path d="M42.4767 101.612C42.4767 101.612 82.3223 80.79 82.3223 51.074C82.3223 21.358 42.4767 0.536011 42.4767 0.536011V101.612Z" fill="#4DB33D"/>
-                <path d="M42.4767 101.612V0.536011C42.4767 0.536011 2.63107 21.358 2.63107 51.074C2.63107 80.79 42.4767 101.612 42.4767 101.612Z" fill="#40A534"/>
-                <path d="M42.4767 101.612V202.688C42.4767 202.688 2.63107 181.866 2.63107 152.15C2.63107 122.434 42.4767 101.612 42.4767 101.612Z" fill="#39932D"/>
-                <path d="M82.3223 101.612V138.05C82.3223 138.05 57.3995 129.082 57.3995 115.208C57.3995 101.334 82.3223 92.366 82.3223 92.366V101.612Z" fill="#13740A"/>
-                <path d="M82.3223 65.174V92.366C82.3223 92.366 57.3995 101.334 57.3995 115.208C57.3995 129.082 82.3223 138.05 82.3223 138.05V152.15C82.3223 181.866 42.4767 202.688 42.4767 202.688V101.612V0.536011C42.4767 0.536011 82.3223 21.358 82.3223 51.074V65.174Z" fill="#12A524"/>
-            </svg>
-            <h2>Chatbot Demo Builder</h2>
+            <img src="/images/mongodb_logo.png" alt="MongoDB Logo" class="logo-img">
         </div>
         <nav>
             <a href="#" class="nav-link active">
@@ -29,7 +21,7 @@
     </div>
     <div class="main-content">
         <header class="header">
-            <h1>Compare and Contrast Documents</h1>
+            <h1>Compare PDFs</h1>
             <p>Upload two or more PDF documents to compare them.</p>
         </header>
 
@@ -46,7 +38,7 @@
             <button id="upload-button" class="hidden">Upload and Ingest</button>
             
             <div id="previous-files-container" class="previous-files-container">
-                <h3>Previously Uploaded</h3>
+                <h3>Previously Uploaded <button id="select-all-btn" class="hidden">Deselect All</button></h3>
                 <div id="previous-files-list"></div>
             </div>
         </section>
@@ -55,7 +47,7 @@
             <h2>2. Ask a question</h2>
             <form id="query-form">
                 <input type="text" id="question" placeholder="e.g., What are the main differences between the documents?" required disabled>
-                <button type="submit" disabled>Compare</button>
+                <button type="submit" disabled>Ask</button>
             </form>
             <div id="predefined-questions" class="predefined-questions hidden">
                 <h4>Suggested Questions</h4>
@@ -86,7 +78,7 @@
         const predefinedQuestionsDiv = document.getElementById('predefined-questions');
 
         let filesToUpload = [];
-        let allAvailableFiles = [];
+        let selectedFiles = [];
 
         document.addEventListener('DOMContentLoaded', fetchPreviousFiles);
 
@@ -94,17 +86,8 @@
             try {
                 const response = await fetch('/api/files');
                 const files = await response.json();
-                allAvailableFiles = files;
                 renderPreviousFiles(files);
-                if (allAvailableFiles.length > 0) {
-                    questionInput.disabled = false;
-                    queryButton.disabled = false;
-                    predefinedQuestionsDiv.classList.remove('hidden');
-                } else {
-                    questionInput.disabled = true;
-                    queryButton.disabled = true;
-                    predefinedQuestionsDiv.classList.add('hidden');
-                }
+                updateQueryState();
             } catch (error) {
                 console.error('Error fetching previous files:', error);
             }
@@ -112,19 +95,36 @@
 
         function renderPreviousFiles(files) {
             previousFilesList.innerHTML = '';
+            const selectAllBtn = document.getElementById('select-all-btn');
+
             if (files.length === 0) {
                 document.getElementById('previous-files-container').style.display = 'none';
+                selectAllBtn.classList.add('hidden');
                 return;
             }
             
             document.getElementById('previous-files-container').style.display = 'block';
+            selectAllBtn.classList.remove('hidden');
+            
+            selectedFiles = [...files]; // By default, all files are selected
+
             files.forEach(file => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-list-item previous-file';
                 
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = file;
+                checkbox.checked = true;
+                checkbox.onchange = () => updateSelectedFiles();
+                
                 const fileName = document.createElement('span');
                 fileName.textContent = file;
-                fileItem.appendChild(fileName);
+                
+                label.appendChild(checkbox);
+                label.appendChild(fileName);
+                fileItem.appendChild(label);
 
                 const buttonsWrapper = document.createElement('div');
                 buttonsWrapper.className = 'file-item-buttons';
@@ -146,7 +146,44 @@
 
                 previousFilesList.appendChild(fileItem);
             });
+            updateSelectAllButton();
         }
+
+        function updateSelectedFiles() {
+            const checkboxes = previousFilesList.querySelectorAll('input[type="checkbox"]');
+            selectedFiles = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            updateQueryState();
+            updateSelectAllButton();
+        }
+
+        function updateQueryState() {
+            const hasFiles = selectedFiles.length > 0;
+            questionInput.disabled = !hasFiles;
+            queryButton.disabled = !hasFiles;
+            if (hasFiles) {
+                predefinedQuestionsDiv.classList.remove('hidden');
+            } else {
+                predefinedQuestionsDiv.classList.add('hidden');
+            }
+        }
+
+        function updateSelectAllButton() {
+            const selectAllBtn = document.getElementById('select-all-btn');
+            const allCheckboxes = previousFilesList.querySelectorAll('input[type="checkbox"]');
+            const allSelected = allCheckboxes.length > 0 && Array.from(allCheckboxes).every(cb => cb.checked);
+            selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+        }
+
+        document.getElementById('select-all-btn').addEventListener('click', () => {
+            const allCheckboxes = previousFilesList.querySelectorAll('input[type="checkbox"]');
+            const allSelected = selectedFiles.length === allCheckboxes.length;
+            allCheckboxes.forEach(cb => {
+                cb.checked = !allSelected;
+            });
+            updateSelectedFiles();
+        });
 
         async function deleteFile(filename) {
             if (!confirm(`Are you sure you want to delete ${filename}? This will remove it from the database and the server.`)) {
@@ -161,11 +198,6 @@
                     throw new Error(result.message || 'Delete failed');
                 }
                 fetchPreviousFiles(); // Refresh the list
-                if (allAvailableFiles.length === 0) {
-                    questionInput.disabled = true;
-                    queryButton.disabled = true;
-                    predefinedQuestionsDiv.classList.add('hidden');
-                }
             } catch (error) {
                 responseDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
             } finally {
@@ -269,8 +301,8 @@
         queryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const question = questionInput.value;
-            if (allAvailableFiles.length < 1) {
-                alert('Please upload at least one PDF to ask a question.');
+            if (selectedFiles.length < 1) {
+                alert('Please select at least one PDF to ask a question.');
                 return;
             }
             
@@ -281,7 +313,7 @@
                 const response = await fetch('/query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question, files: allAvailableFiles })
+                    body: JSON.stringify({ question, files: selectedFiles })
                 });
                 const result = await response.json();
                 if (!response.ok) {
