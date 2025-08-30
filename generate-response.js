@@ -34,17 +34,17 @@ async function run() {
 
     // Substitute with your favorite LLM service provider as needed
     const anthropic = new Anthropic();
-    const answer = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'user',
-          content: [{ type: 'text', text: prompt }],
-        },
-      ],
+    const response = await anthropic.messages.create({
+        model: "claude-3-5-haiku-20241022",
+        max_tokens: 4096,
+        messages: [
+            {
+                role: "user",
+                content: prompt,
+            },
+        ],
     });
-    console.log(answer.content[0].text);
+    console.log(response.content[0].text);
   } catch (err) {
     console.log(err.stack);
   }

@@ -18,6 +18,10 @@
                 <span class="info-icon">i</span>
             </a>
         </nav>
+        <div id="previous-files-container" class="previous-files-container">
+            <h3>Previously Uploaded <button id="select-all-btn" class="hidden">Deselect All</button></h3>
+            <div id="previous-files-list"></div>
+        </div>
     </div>
     <div class="main-content">
         <header class="header">
@@ -25,42 +29,39 @@
             <p>Upload two or more PDF documents to compare them.</p>
         </header>
 
-        <section class="data-source-section">
-            <h2>1. Add Data Sources</h2>
-            <p class="subtitle">Select one or more content sources to compare.</p>
-            <div id="drop-zone" class="card active">
-                <img src="/images/upload.svg" alt="Upload icon">
-                <h3>Drag & drop files or click to upload</h3>
-                <p>PDF</p>
-                <input type="file" id="file-input" multiple hidden accept="application/pdf">
-            </div>
-            <div id="file-list"></div>
-            <button id="upload-button" class="hidden">Upload and Ingest</button>
-            
-            <div id="previous-files-container" class="previous-files-container">
-                <h3>Previously Uploaded <button id="select-all-btn" class="hidden">Deselect All</button></h3>
-                <div id="previous-files-list"></div>
-            </div>
-        </section>
+        <div class="content-columns">
+            <section class="data-source-section">
+                <h2>1. Add Data Sources</h2>
+                <p class="subtitle">Select one or more content sources to compare.</p>
+                <div id="drop-zone" class="card active">
+                    <img src="/images/upload.svg" alt="Upload icon">
+                    <h3>Drag & drop files or click to upload</h3>
+                    <p>PDF</p>
+                    <input type="file" id="file-input" multiple hidden accept="application/pdf">
+                </div>
+                <div id="file-list"></div>
+                <button id="upload-button" class="hidden">Upload and Ingest</button>
+            </section>
 
-        <section id="comparison-section" class="comparison-section">
-            <h2>2. Ask a question</h2>
-            <form id="query-form">
-                <input type="text" id="question" placeholder="e.g., What are the main differences between the documents?" required disabled>
-                <button type="submit" disabled>Ask</button>
-            </form>
-            <div id="predefined-questions" class="predefined-questions hidden">
-                <h4>Suggested Questions</h4>
-                <button class="predefined-question-btn">How do NOx emission limits change?</button>
-                <button class="predefined-question-btn">What safety systems become mandatory?</button>
-                <button class="predefined-question-btn">What are the new crash test requirements?</button>
-            </div>
-            <div id="loader" class="loader hidden">
-                <div class="spinner"></div>
-                <p>Processing...</p>
-            </div>
-            <div id="response" class="response"></div>
-        </section>
+            <section id="comparison-section" class="comparison-section">
+                <h2>2. Ask a question</h2>
+                <form id="query-form">
+                    <input type="text" id="question" placeholder="e.g., What are the main differences between the documents?" required disabled>
+                    <button type="submit" disabled>Ask</button>
+                </form>
+                <div id="predefined-questions" class="predefined-questions hidden">
+                    <h4>Suggested Questions</h4>
+                    <button class="predefined-question-btn">How do NOx emission limits change?</button>
+                    <button class="predefined-question-btn">What safety systems become mandatory?</button>
+                    <button class="predefined-question-btn">What are the new crash test requirements?</button>
+                </div>
+                <div id="loader" class="loader hidden">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+            </section>
+        </div>
+        <div id="response" class="response"></div>
     </div>
 
     <script>
@@ -209,7 +210,6 @@
             if (e.target.classList.contains('predefined-question-btn')) {
                 const question = e.target.textContent;
                 questionInput.value = question;
-                queryForm.requestSubmit(); // Modern way to submit a form
             }
         });
 

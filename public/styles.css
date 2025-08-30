@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=MongoDB+Value+Serif:wght@400;700&display=swap');
 
 :root {
     --background-dark: #0F172A;
@@ -14,7 +14,7 @@
 }
 
 body {
-    font-family: 'Geist Sans', sans-serif;
+    font-family: 'MongoDB Value Serif', 'Times New Roman', serif;
     margin: 0;
     background-color: var(--background-dark);
     color: var(--text-primary);
@@ -30,6 +30,7 @@ body {
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-color);
+    overflow-y: auto;
 }
 
 .logo {
@@ -87,8 +88,28 @@ body {
     flex: 1;
     padding: 2rem 8rem;
     overflow-y: auto;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    position: relative;
+}
+
+.content-columns::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    background-color: var(--border-color);
 }
 
 .header {
@@ -157,12 +178,13 @@ body {
 #drop-zone {
     border: 2px dashed var(--border-color);
     border-radius: 8px;
-    padding: 40px;
+    padding: 20px;
     text-align: center;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
     margin-bottom: 20px;
     background-color: var(--card-bg);
+    max-width: 600px;
 }
 
 #drop-zone.dragover {
@@ -229,6 +251,8 @@ button:hover {
     background-color: var(--accent-green);
     color: var(--background-dark);
     font-weight: bold;
+    display: block;
+    margin: 0 auto;
 }
 
 #upload-button:hover {
@@ -246,6 +270,8 @@ button:hover {
     padding: 12px 40px;
     color: var(--background-dark);
     font-weight: bold;
+    display: block;
+    margin: 0 auto;
 }
 
 .loader {
@@ -275,7 +301,9 @@ button:hover {
     border-radius: 6px;
     border: 1px solid var(--border-color);
     white-space: pre-wrap;
-    line-height: 1.6;
+    line-height: 1;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .response p {
