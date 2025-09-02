@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=MongoDB+Value+Serif:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=MongoDB+Value+Serif:wght@400;700&family=Lexend+Deca:wght@300;400;500&display=swap');
 
 :root {
     --background-dark: #0F172A;
@@ -301,14 +301,17 @@ button:hover {
     border-radius: 6px;
     border: 1px solid var(--border-color);
     white-space: pre-wrap;
-    line-height: 1.4;
+    line-height: 1.2;
     flex-grow: 1;
     overflow-y: auto;
+    font-family: 'Lexend Deca', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    font-size: 0.9rem;
 }
 
 .response p {
-    margin: 0.3rem 0;
-    line-height: 1.4;
+    margin: 0.1rem 0;
+    line-height: 1.2;
 }
 
 .response p:first-child {
@@ -320,18 +323,19 @@ button:hover {
 }
 
 .response ul, .response ol {
-    margin: 0.3rem 0;
-    padding-left: 1.5rem;
+    margin: 0.1rem 0;
+    padding-left: 1.2rem;
 }
 
 .response li {
-    margin: 0.1rem 0;
-    line-height: 1.4;
+    margin: 0.02rem 0;
+    line-height: 1.2;
 }
 
 .response h1, .response h2, .response h3, .response h4, .response h5, .response h6 {
-    margin: 0.6rem 0 0.3rem 0;
-    line-height: 1.2;
+    margin: 0.3rem 0 0.1rem 0;
+    line-height: 1.0;
+    font-weight: 500;
 }
 
 .response h1:first-child, .response h2:first-child, .response h3:first-child, 

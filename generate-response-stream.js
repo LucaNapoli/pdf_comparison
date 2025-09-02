@@ -20,9 +20,6 @@ async function run() {
   try {
     const documents = await getQueryResults(QUESTION, NUM_CANDIDATES, EXACT, LIMIT, PDF_FILES);
     
-    // Uncomment below line to print out retrieved documents
-    // console.log('Retrieved documents: ', documents);
-
     // Create a prompt consisting of the question and context to pass to the LLM
     const prompt = `You are a document comparison assistant in the automotive industry. You are provided with text chunks from two documents representing subsequent versions of the same pdf, one being an update to the other one. Your task is to compare them and answer the question based on the provided context.
       
@@ -41,9 +38,10 @@ async function run() {
 
       Question: ${QUESTION}`;
 
-    // Substitute with your favorite LLM service provider as needed
+    // Use Anthropic with streaming
     const anthropic = new Anthropic();
-    const response = await anthropic.messages.create({
+    
+    const stream = anthropic.messages.stream({
         model: "claude-3-5-haiku-20241022",
         max_tokens: 4096,
         messages: [
@@ -53,9 +51,17 @@ async function run() {
             },
         ],
     });
-    console.log(response.content[0].text);
+
+    // Handle the streaming response
+    stream.on('text', (text) => {
+        process.stdout.write(text);
+    });
+
+    await stream.finalMessage();
+    
   } catch (err) {
-    console.log(err.stack);
+    console.error(err.stack);
   }
 }
+
 run().catch(console.dir);

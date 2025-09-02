@@ -209,29 +209,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         showLoader(true, 'Generating response...');
         responseDiv.innerHTML = '';
+        
         try {
-            const response = await fetch('/query', {
+            const response = await fetch('/query-stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: questionInput.value, files: selectedFiles })
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
             
-            // Parse the markdown response
-            let htmlResponse = marked.parse(result.answer);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            // Convert chunk: links to clickable elements with data attributes
-            htmlResponse = htmlResponse.replace(
-                /<a href="chunk:([^"]+)">(\d+)<\/a>/g,
-                '<a href="#" data-chunk-id="$1" class="chunk-link">[$2]</a>'
-            );
+            showLoader(false);
             
-            responseDiv.innerHTML = htmlResponse;
+            // Read the stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                accumulatedText += chunk;
+                
+                // Parse the accumulated markdown and update the response
+                let htmlResponse = marked.parse(accumulatedText);
+                
+                // Convert chunk: links to clickable elements with data attributes
+                htmlResponse = htmlResponse.replace(
+                    /<a href="chunk:([^"]+)">(\d+)<\/a>/g,
+                    '<a href="#" data-chunk-id="$1" class="chunk-link">[$2]</a>'
+                );
+                
+                responseDiv.innerHTML = htmlResponse;
+                
+                // Scroll to bottom to follow the streaming text
+                responseDiv.scrollTop = responseDiv.scrollHeight;
+            }
 
         } catch (error) {
             responseDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
-        } finally {
             showLoader(false);
         }
     });

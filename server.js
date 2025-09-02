@@ -105,6 +105,57 @@ app.post('/query', async (req, res) => {
     }
 });
 
+// Endpoint to handle streaming queries
+app.post('/query-stream', async (req, res) => {
+    const { question, files } = req.body;
+    if (!question || !files || files.length < 1) {
+        return res.status(400).json({ message: 'A question and at least one file are required.' });
+    }
+
+    const filePaths = files.map(f => path.join('uploads', f));
+    console.log('Streaming query with:', { question, files: filePaths });
+
+    // Set headers for streaming text
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        const process = spawn('node', ['--env-file=.env', 'generate-response-stream.js', question, ...filePaths]);
+        let errorOutput = '';
+
+        process.stdout.on('data', (data) => {
+            const chunk = data.toString();
+            console.log(`[streaming]: ${chunk}`);
+            res.write(chunk);
+        });
+
+        process.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+            console.error(`[streaming stderr]: ${data}`);
+        });
+
+        process.on('close', (code) => {
+            if (code === 0) {
+                res.end();
+            } else {
+                res.write(`Error: Script exited with code ${code}\n${errorOutput}`);
+                res.end();
+            }
+        });
+
+        // Handle client disconnect
+        res.on('close', () => {
+            process.kill();
+        });
+
+    } catch (error) {
+        console.error('Streaming query error:', error);
+        res.write(`Error: ${error.message}`);
+        res.end();
+    }
+});
+
 // New endpoint to fetch a specific text chunk for preview
 app.get('/api/preview', async (req, res) => {
     const { chunkId } = req.query;
