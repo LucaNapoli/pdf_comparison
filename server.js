@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readdir, unlink } from 'fs/promises';
+import { MongoClient } from 'mongodb';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,6 +102,41 @@ app.post('/query', async (req, res) => {
     } catch (error) {
         console.error('Query error:', error);
         res.status(500).json({ message: 'Error generating response.' });
+    }
+});
+
+// New endpoint to fetch a specific text chunk for preview
+app.get('/api/preview', async (req, res) => {
+    const { chunkId } = req.query;
+    if (!chunkId) {
+        return res.status(400).json({ message: 'Chunk ID is required.' });
+    }
+
+    const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
+    try {
+        await client.connect();
+        const db = client.db("rag_db");
+        const collection = db.collection("test");
+        
+        const document = await collection.findOne(
+            { chunk_id: chunkId },
+            { projection: { _id: 0, text: 1, source_pdf: 1, page_number: 1 } }
+        );
+
+        if (document) {
+            res.json({ 
+                text: document.text,
+                source: path.basename(document.source_pdf),
+                page: document.page_number
+            });
+        } else {
+            res.status(404).json({ message: 'Preview text not found.' });
+        }
+    } catch (error) {
+        console.error('Preview Error:', error);
+        res.status(500).json({ message: 'Failed to fetch preview.' });
+    } finally {
+        await client.close();
     }
 });
 

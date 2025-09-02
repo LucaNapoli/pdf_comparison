@@ -1,64 +1,58 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { getEmbedding } from './get-embeddings.js';
 import { MongoClient } from 'mongodb';
-import { getEmbeddings } from './get-embeddings.js';
-import { getEncoding } from 'js-tiktoken';
+import { v4 as uuidv4 } from 'uuid';
 
-// The PDF file to ingest is passed as a command-line argument.
+const PDF_PATH = process.argv[2];
 
-// Specify the chunking params
-const CHUNK_SIZE = 250;
-const CHUNK_OVERLAP = 50;
-
-// Counts number of tokens in a given string.
-const encoding = getEncoding('gpt2');
-
-export const getTokenCount = (text) => {
-  return encoding.encode(text).length;
-};
+if (!PDF_PATH) {
+  console.error('Please provide a path to a PDF file.');
+  process.exit(1);
+}
 
 async function run() {
-  const pdfPath = process.argv[2];
-  if (!pdfPath) {
-    console.error('Please provide the path to a PDF file as a command-line argument.');
-    process.exit(1);
-  }
-
-  const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
   try {
-    const loader = new PDFLoader(pdfPath);
-    const data = await loader.load();
-    // Chunk the text from the PDF
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: CHUNK_SIZE,
-      chunkOverlap: CHUNK_OVERLAP,
-      lengthFunction: getTokenCount,
+    // Use PDFLoader to load the PDF and extract the text
+    const loader = new PDFLoader(PDF_PATH, {
+      splitPages: true,
+      parsedItemSeparator: ""
     });
-    const docs = await textSplitter.splitDocuments(data);
-    console.log(`Successfully chunked ${pdfPath} into ${docs.length} documents.`);
+    const docs = await loader.load();
+
+    // Use RecursiveCharacterTextSplitter to split the text into chunks
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 100,
+    });
+    const chunks = await splitter.splitDocuments(docs);
+
     // Connect to your Atlas cluster
+    const client = new MongoClient(process.env.ATLAS_CONNECTION_STRING);
     await client.connect();
     const db = client.db("rag_db");
     const collection = db.collection("test");
+
+    // Create an array of documents to insert into the collection
+    for (const chunk of chunks) {
+      const embedding = await getEmbedding(chunk.pageContent);
+      chunk.metadata.source_pdf = PDF_PATH;
+      chunk.metadata.chunk_id = uuidv4(); // Add unique ID to each chunk
+      await collection.insertOne({
+        text: chunk.pageContent,
+        page_number: chunk.metadata.loc.pageNumber,
+        source_pdf: chunk.metadata.source_pdf,
+        chunk_id: chunk.metadata.chunk_id,
+        vector_embeddings: embedding
+      });
+    }
     
-    console.log("Generating embeddings and inserting documents...");
-    const embeddings = await getEmbeddings(docs.map(doc => doc.pageContent));
-    const insertDocuments = docs.map((doc, index) => ({
-      text: doc.pageContent,
-      vector_embeddings: embeddings[index],
-      page_number: doc.metadata.loc.pageNumber,
-      source_pdf: pdfPath,
-    }));
-    // Continue processing documents if an error occurs during an operation
-    const options = { ordered: false };
-    // Insert documents with embeddings into Atlas
-    const result = await collection.insertMany(insertDocuments, options);
-    console.log("Count of documents inserted: " + result.insertedCount);
-  } catch (err) {
-    console.log(err.stack);
-  }
-  finally {
+    console.log('Data ingestion and embedding complete.');
     await client.close();
+  } catch (err) {
+    console.error(err.stack);
   }
 }
-run().catch(console.dir);
+
+run();
+

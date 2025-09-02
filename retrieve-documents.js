@@ -37,6 +37,7 @@ export async function getQueryResults(query, numCandidates, exact, limit, source
           text: 1,
           page_number: 1,
           source_pdf: 1,
+          chunk_id: 1,
           score: {
             $meta: "vectorSearchScore"
           }

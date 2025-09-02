@@ -12,9 +12,9 @@ if (!QUESTION) {
 }
 
 // Specify the search query parameters
-const NUM_CANDIDATES = 40;
+const NUM_CANDIDATES = 5;
 const EXACT = false;
-const LIMIT = 10; // Increased limit to get more context from multiple files
+const LIMIT = 5; // Increased limit to get more context from multiple files
 
 async function run() {
   try {
@@ -24,12 +24,19 @@ async function run() {
     // console.log('Retrieved documents: ', documents);
 
     // Create a prompt consisting of the question and context to pass to the LLM
-    const prompt = `You are a document comparison assistant. You are provided with text chunks from multiple documents. Your task is to compare them and answer the question based on the provided context. The source PDF for each chunk is provided.
-      When answering, refer to the source PDF and page number for each piece of information. Format your references as clickable markdown links, like this: [Source: document.pdf, Page: 12](http://localhost:3000/uploads/document.pdf#page=12).
-      Respond appropriately if the question cannot be feasibly answered without access to the full text.
-      Acknowledge limitations when the context provided is incomplete or does not contain relevant information to answer the question.
-      If you need to fill knowledge gaps using information outside of the context, clearly attribute it as such.
-      Context: ${documents.map(doc => `Source: [${path.basename(doc.source_pdf)}, Page: ${doc.page_number}](http://localhost:3000/uploads/${path.basename(doc.source_pdf)}#page=${doc.page_number})\nText: ${doc.text}`).join('\n\n')}
+    const prompt = `You are a document comparison assistant. You are provided with text chunks from multiple documents. Your task is to compare them and answer the question based on the provided context.
+      
+      CRITICAL CITATION INSTRUCTIONS:
+      - You MUST cite sources using this EXACT format: [number](chunk:chunk-id)
+      - Example: "The emission limit is 0.05 g/km [1](chunk:ae9654c6-897a-49c8-82f5-1a99631893c5)."
+      - Place citations at the END of sentences
+      - Use the exact chunk IDs provided below
+      - Do NOT create citations without chunk IDs
+      - Do NOT use plain brackets like [1] without the (chunk:id) part
+      
+      Available sources with their chunk IDs:
+      ${documents.map((doc, index) => `[${index + 1}] Chunk ID: ${doc.chunk_id}\nSource: ${path.basename(doc.source_pdf)}, Page: ${doc.page_number}\nText: ${doc.text}`).join('\n\n')}
+      
       Question: ${QUESTION}`;
 
     // Substitute with your favorite LLM service provider as needed
